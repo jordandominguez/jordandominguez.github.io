@@ -22,10 +22,13 @@ var current_year = 2000;
 
 d3.csv("olympic_data.csv",function(data){
 
+
 	//waiting for the json file to load
+
 	queue()
     .defer(d3.json,"world_data.json")
     .await(initVis);
+
 
 
     //intiializing the visualization 
@@ -41,7 +44,6 @@ d3.csv("olympic_data.csv",function(data){
 		  .style("font-size", "15px")
 		  .attr("class", "tooltip");
 
-
     	var years = [];
 
 		data.forEach(function(d){
@@ -55,7 +57,20 @@ d3.csv("olympic_data.csv",function(data){
 	  
 
 	  	//generating a drop-down menu to select which year to display data for
-		
+			
+	    var years = [];
+
+		  data.forEach(function(d){
+		  	if(years.indexOf(d['Year']) == -1){
+		  		years.push(d['Year']);
+		  	}
+		  });
+
+		  years.sort();
+
+	  
+
+
 		var yearDrop = d3.select("#table_container")
 		    .data(years)
 		    .append("form")
@@ -74,6 +89,7 @@ d3.csv("olympic_data.csv",function(data){
 	   
 	
 	    //colors the countries that have data available for that year
+
 
     	function activate(){
 	  	paths = d3.selectAll("path");
@@ -95,12 +111,15 @@ d3.csv("olympic_data.csv",function(data){
 
 
 		 //svg containing the main visualization
+
 		var svg = d3.select("#vis").append("svg").attr({
 		    width: width + margin.left + margin.right,
 		    height: height + margin.top + margin.bottom
 		}).append("g").attr("id","mainVis").attr({"transform" :  "translate(" + (margin.left) + "," + margin.top + ")"});
 
+
 		//svg containing the bar chart 
+
 
 		var svg2 = d3.select("#detailVis1").append("svg").attr({
 			width : width + margin.left + margin.right - 400,
@@ -110,7 +129,9 @@ d3.csv("olympic_data.csv",function(data){
 				});
 
 
+
 		//svg containing the line graph
+
 		var svg3 = d3.select("#detailVis2").append("svg").attr({
 			width : width + margin.left + margin.right ,
 			height : height + margin.top + margin.bottom
@@ -136,7 +157,9 @@ d3.csv("olympic_data.csv",function(data){
 
 
 
+
 		//creating the world map
+
 		svg.selectAll("path")
 		        .data(world.features.filter(function(d) {return d.id != -99; }))
 		        .enter()
@@ -228,14 +251,15 @@ d3.csv("olympic_data.csv",function(data){
 
 	}
 
+		
 
+		
 	//generates the line graph
 	function make_line_graph(country){
 		d3.selectAll(".linegraph").remove()
-		
-		//aggregating all the data into a better data structure
+
+		//aggregating the data
 		medals_data = [{medal : "gold", counts : []},{medal : "silver", counts : []}, {medal : "bronze", counts : []}]
-		
 		years.forEach(function(y){
 			gold = 0;
 			silver = 0;
@@ -264,10 +288,12 @@ d3.csv("olympic_data.csv",function(data){
 			})
 		});
 
+
 		var format = d3.time.format('%Y');
 
 
 		var x = d3.time.scale().range([margin.left,width]).domain([format.parse('2000'),format.parse('2012')]);
+
 
 		var y = d3.scale.linear().range([0,height]).domain([150,0]);
 
@@ -280,6 +306,7 @@ d3.csv("olympic_data.csv",function(data){
 
     	var line = d3.svg.line()
     		.interpolate("linear")
+
     		.x(function(d) {return x(format.parse(d.year)); })
     		.y(function(d) {return y(d.medals); });
 
@@ -327,10 +354,13 @@ d3.csv("olympic_data.csv",function(data){
 
 
 
+
 	}
 
 
+
 	//creates the bar chart 
+
 	function make_bars(country){
 		d3.selectAll(".detail").remove();
 		var x = d3.scale.ordinal()
