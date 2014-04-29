@@ -122,7 +122,7 @@ d3.csv("olympic_data.csv",function(data){
 
 
 		var svg2 = d3.select("#detailVis1").append("svg").attr({
-			width : width + margin.left + margin.right - 400,
+			width : width + margin.left + margin.right - 300,
 			height : height + margin.top + margin.bottom + 100
 			}).append("g").attr({
 				transform : "translate(" + (margin.left + 100) + "," + (margin.top - 5) + ")"
