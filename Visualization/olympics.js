@@ -21,13 +21,17 @@ var bbVis = {
 var current_year = 2000;
 
 d3.csv("olympic_data.csv",function(data){
+
+	//waiting for the json file to load
 	queue()
     .defer(d3.json,"world_data.json")
     .await(initVis);
 
 
-
+    //intiializing the visualization 
     function initVis(error,world){
+
+    	//tooltip displaying how many medals the clicked-on country won
     	var tooltip = d3.select("body")
 		  .append("div")
 		  .style("position", "absolute")
@@ -38,19 +42,20 @@ d3.csv("olympic_data.csv",function(data){
 		  .attr("class", "tooltip");
 
 
-    var years = [];
+    	var years = [];
 
-	  data.forEach(function(d){
-	  	if(years.indexOf(d['Year']) == -1){
-	  		years.push(d['Year']);
-	  	}
-	  });
+		data.forEach(function(d){
+		 	if(years.indexOf(d['Year']) == -1){
+		  		years.push(d['Year']);
+		  	}
+		});
 
-	  years.sort();
+	  	years.sort();
 
 	  
 
-
+	  	//generating a drop-down menu to select which year to display data for
+		
 		var yearDrop = d3.select("#table_container")
 		    .data(years)
 		    .append("form")
@@ -60,14 +65,15 @@ d3.csv("olympic_data.csv",function(data){
 
 
 
-	  var yearOpts = yearDrop.selectAll("option")
-    	.data(years)
-    	.enter()
-    	.append("option")
-      	.text(function (d) { return d; })
-      	.attr("value", function (d) { return d; });
-   
+		var yearOpts = yearDrop.selectAll("option")
+	    	.data(years)
+	    	.enter()
+	    	.append("option")
+	      	.text(function (d) { return d; })
+	      	.attr("value", function (d) { return d; });
+	   
 	
+	    //colors the countries that have data available for that year
 
     	function activate(){
 	  	paths = d3.selectAll("path");
@@ -87,10 +93,14 @@ d3.csv("olympic_data.csv",function(data){
 		  		});
 		 }
 
+
+		 //svg containing the main visualization
 		var svg = d3.select("#vis").append("svg").attr({
 		    width: width + margin.left + margin.right,
 		    height: height + margin.top + margin.bottom
 		}).append("g").attr("id","mainVis").attr({"transform" :  "translate(" + (margin.left) + "," + margin.top + ")"});
+
+		//svg containing the bar chart 
 
 		var svg2 = d3.select("#detailVis1").append("svg").attr({
 			width : width + margin.left + margin.right - 400,
@@ -99,6 +109,8 @@ d3.csv("olympic_data.csv",function(data){
 				transform : "translate(" + (margin.left + 100) + "," + (margin.top - 5) + ")"
 				});
 
+
+		//svg containing the line graph
 		var svg3 = d3.select("#detailVis2").append("svg").attr({
 			width : width + margin.left + margin.right ,
 			height : height + margin.top + margin.bottom
@@ -124,7 +136,7 @@ d3.csv("olympic_data.csv",function(data){
 
 
 
-
+		//creating the world map
 		svg.selectAll("path")
 		        .data(world.features.filter(function(d) {return d.id != -99; }))
 		        .enter()
@@ -146,77 +158,84 @@ d3.csv("olympic_data.csv",function(data){
 
 		
 
+		//zooms in on a country when clicked and displays the corresponding bar chart and line graph
 
 		function zoom (d) {
-    	var country_name = d.properties.name;
-    	make_bars(country_name);
-    	make_line_graph(country_name);
-    	console.log(country_name);
-    	var gold_medals = 0;
-    	var silver_medals = 0;
-    	var bronze_medals = 0;
-    	data.forEach(function(athlete){
-    		if (athlete['Country'] == country_name) {
-    			if(athlete['Year'] == current_year) {
-    				gold_medals += parseInt(athlete['Gold Medals']);
-    				silver_medals += parseInt(athlete['Silver Medals']);
-    				bronze_medals += parseInt(athlete['Bronze Medals']);
-    			}
-    		}
 
-    	});
-    	console.log(gold_medals);
-    	console.log(silver_medals);
-    	console.log(bronze_medals);
-    	
+	    	var country_name = d.properties.name;
+	    	make_bars(country_name);
+	    	make_line_graph(country_name);
+	    	console.log(country_name);
+	    	var gold_medals = 0;
+	    	var silver_medals = 0;
+	    	var bronze_medals = 0;
 
+	    	//aggregating the total number of gold, silver, and bronze medals
+	    	data.forEach(function(athlete){
+	    		if (athlete['Country'] == country_name) {
+	    			if(athlete['Year'] == current_year) {
+	    				gold_medals += parseInt(athlete['Gold Medals']);
+	    				silver_medals += parseInt(athlete['Silver Medals']);
+	    				bronze_medals += parseInt(athlete['Bronze Medals']);
+	    			}
+	    		}
 
-	  
-	  var x, y, k;
-
-	  if (d && centered !== d) {
-	  	console.log(tooltip);
-	    var centroid = path.centroid(d);
-	    x = centroid[0];
-	    y = centroid[1];
-	    k = 4;
-	    centered = d;
-	    tooltip.style("left",function (d) {return (bbVis.w/2 + margin.left - 100) + "px"})
-	    .style("top",function (d){ return (bbVis.h/2 + margin.top ) + "px"})
-	    .style("visibility", "visible")
-        .html("<b>" + country_name + "</b><br><b>"+ gold_medals + "</b> gold medals <br><b>" + silver_medals + "</b> silver medals<br><b>" + bronze_medals + "</b> bronze medals");
-	  } else {
-	  	tooltip.style("visibility","hidden");
-	    x = width / 2;
-	    y = height/2;
-	    k = 0.9;
-	    centered = null;
-	  }
-
-	  svg.selectAll("path")
-	      .classed("zoomed", centered && function(d) { return d === centered; });
-
-	  svg.transition()
-	      .duration(750)
-	      .attr("transform", "translate(" + ((width) / 2 ) + "," + ((height ) / 2 ) + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
-	      .style("stroke-width", 1.5 / k + "px");
+	    	});
+	    	
 
 
-	  data.forEach(function(e){
-		if (e['Year'] == current_year) {
-			this_path = d3.select("path[country = '" + d['Country']+ "']");
-			this_path.forEach(function(p){
-			d3.select(p[0]).classed("active",true)});
+		  
+		  var x, y, k;
 
-		  	}
-		});
+		  if (d && centered !== d) {
+		  	console.log(tooltip);
+		    var centroid = path.centroid(d);
+		    x = centroid[0];
+		    y = centroid[1];
+		    k = 4;
+		    centered = d;
+		    tooltip.style("left",function (d) {return (bbVis.w/2 + margin.left - 100) + "px"})
+		    .style("top",function (d){ return (bbVis.h/2 + margin.top ) + "px"})
+		    .style("visibility", "visible")
+	        .html("<b>" + country_name + "</b><br><b>"+ gold_medals + "</b> gold medals <br><b>" + silver_medals + "</b> silver medals<br><b>" + bronze_medals + "</b> bronze medals");
+		  } else {
+		  	tooltip.style("visibility","hidden");
+		    x = width / 2;
+		    y = height/2;
+		    k = 0.9;
+		    centered = null;
+		  }
+
+		  svg.selectAll("path")
+		      .classed("zoomed", centered && function(d) { return d === centered; });
+
+		  svg.transition()
+		      .duration(750)
+		      .attr("transform", "translate(" + ((width) / 2 ) + "," + ((height ) / 2 ) + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+		      .style("stroke-width", 1.5 / k + "px");
+
+		  //recoloring the countries for which data is available
+
+		  data.forEach(function(e){
+			if (e['Year'] == current_year) {
+				this_path = d3.select("path[country = '" + d['Country']+ "']");
+				this_path.forEach(function(p){
+				d3.select(p[0]).classed("active",true)});
+
+			  	}
+			});
 
 
 	}
 
+
+	//generates the line graph
 	function make_line_graph(country){
 		d3.selectAll(".linegraph").remove()
+		
+		//aggregating all the data into a better data structure
 		medals_data = [{medal : "gold", counts : []},{medal : "silver", counts : []}, {medal : "bronze", counts : []}]
+		
 		years.forEach(function(y){
 			gold = 0;
 			silver = 0;
@@ -230,6 +249,7 @@ d3.csv("olympic_data.csv",function(data){
 				}
 
 			});
+
 			medals_data.forEach(function (m){
 				console.log(m);
 				if (m.medal == 'gold'){
@@ -244,7 +264,10 @@ d3.csv("olympic_data.csv",function(data){
 			})
 		});
 
-		var x = d3.scale.linear().range([margin.left,width - margin.right]).domain([2000,2012]);
+		var format = d3.time.format('%Y');
+
+
+		var x = d3.time.scale().range([margin.left,width]).domain([format.parse('2000'),format.parse('2012')]);
 
 		var y = d3.scale.linear().range([0,height]).domain([150,0]);
 
@@ -257,8 +280,8 @@ d3.csv("olympic_data.csv",function(data){
 
     	var line = d3.svg.line()
     		.interpolate("linear")
-    		.x(function(d) { console.log(d.year);console.log(x(d.year));return x(d.year); })
-    		.y(function(d) { console.log(d.medals);console.log(y(d.medals));return y(d.medals); });
+    		.x(function(d) {return x(format.parse(d.year)); })
+    		.y(function(d) {return y(d.medals); });
 
     	var color = d3.scale.ordinal()
 		    .range(["#8c7853","#C0C0C0","#FFD700"])
@@ -301,20 +324,13 @@ d3.csv("olympic_data.csv",function(data){
       		.style("fill","none")
       		.style("stroke", function(d) { return color(d.medal); });
 
-		  // medal.append("text")
-		  //     .datum(function(d) { return {name: d.medal, value: d.counts[d.counts.length - 1]}; })
-		  //     .attr("transform", function(d) { console.log(d);return "translate(" + x(d.value.year) + "," + y(d.value.medals) + ")"; })
-		  //     .attr("x", 3)
-		  //     .attr("dy", ".35em")
-		  //     .text(function(d) { return d.medal; });
-
 
 
 
 	}
 
 
-
+	//creates the bar chart 
 	function make_bars(country){
 		d3.selectAll(".detail").remove();
 		var x = d3.scale.ordinal()
