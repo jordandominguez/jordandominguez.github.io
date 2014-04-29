@@ -364,7 +364,7 @@ d3.csv("olympic_data.csv",function(data){
 	function make_bars(country){
 		d3.selectAll(".detail").remove();
 		var x = d3.scale.ordinal()
-			.rangeRoundBands([0,350], .1);
+			.rangeRoundBands([0,300], .1);
 
 		var y = d3.scale.linear()
 			.range([bbVis.h,margin.top])
